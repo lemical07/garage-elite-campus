@@ -51,6 +51,30 @@ BEGIN
 
     SET p_cita_id = LAST_INSERT_ID();
 END //
+DELIMITER ;
+DELIMITER //
+CREATE PROCEDURE sp_listar_citas_servicio(
+    IN p_estado VARCHAR(20)
+)
+BEGIN
+    SELECT
+        cs.id_cita,
+        c.nombre AS nombre_cliente,
+        m.nombre AS nombre_mecanico,
+        tv.tipo_vehiculo AS categoria,
+        ns.nombre_servicio AS operacion,
+        cs.fecha_cita AS fecha,
+        cs.estado_cita AS etapa_cita,
+        cs.precio_final AS pago_total,
+        cs.notas AS detalles
 
 
+    FROM citas_servicio cs
+    JOIN vehiculos tv ON cs.id_vehiculo = tv.id_vehiculo
+    JOIN clientes c ON tv.id_cliente = c.id_cliente
+    JOIN mecanicos m ON cs.id_mecanico = m.id_mecanico
+    JOIN servicios ns ON cs.id_servicio = ns.id_servicio
+
+    WHERE (cs.estado_cita = p_estado OR p_estado IS NULL);
+END //
 DELIMITER ;
