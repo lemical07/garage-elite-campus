@@ -52,6 +52,8 @@ BEGIN
     SET p_cita_id = LAST_INSERT_ID();
 END //
 DELIMITER ;
+
+-- -----------------------------------------------------------------------------------------------------------------------------
 DELIMITER //
 CREATE PROCEDURE sp_listar_citas_servicio(
     IN p_estado VARCHAR(20)
@@ -76,5 +78,65 @@ BEGIN
     JOIN servicios ns ON cs.id_servicio = ns.id_servicio
 
     WHERE (cs.estado_cita = p_estado OR p_estado IS NULL);
+END //
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------------------------------------------------------
+DELIMITER //
+CREATE PROCEDURE sp_actualizar_cita_servicio(
+    IN p_id_cita INT,
+    IN p_id_mecanico INT,
+    IN p_fecha_cita DATETIME,
+    IN p_estado_cita VARCHAR(20),
+    IN p_precio_final DECIMAL(10,2),
+    IN p_notas VARCHAR(255)
+)
+BEGIN
+    DECLARE estado_actual VARCHAR(20);
+    DECLARE mecanico_existe INT;
+    DECLARE estado_mecanico VARCHAR(20);
+
+    SELECT estado_cita INTO estado_actual
+    FROM citas_servicio WHERE id_cita = p_id_cita;
+
+    IF estado_actual IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La cita especificada no existe';
+    END IF;
+
+    IF estado_actual = 'cancelada' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se puede actualizar una cita cancelada';
+    END IF;
+
+    IF p_estado_cita NOT IN ('pendiente', 'en_proceso', 'completada', 'cancelada') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Estado no permitido';
+    END IF;
+
+    SELECT COUNT(*) INTO mecanico_existe FROM mecanicos WHERE id_mecanico = p_id_mecanico;
+    IF mecanico_existe = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El mecánico especificado no existe';
+    END IF;
+
+    SELECT estado INTO estado_mecanico FROM mecanicos WHERE id_mecanico = p_id_mecanico;
+    IF estado_mecanico != 'activo' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El mecánico especificado no está activo';
+    END IF;
+
+    IF p_precio_final < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El precio final no puede ser negativo';
+    END IF;
+
+    UPDATE citas_servicio
+    SET id_mecanico = p_id_mecanico,
+        fecha_cita = p_fecha_cita,
+        estado_cita = p_estado_cita,
+        precio_final = p_precio_final,
+        notas = p_notas
+    WHERE id_cita = p_id_cita;
 END //
 DELIMITER ;
