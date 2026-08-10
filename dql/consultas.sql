@@ -41,3 +41,13 @@ FROM vehiculos tv
 JOIN citas_servicio cs ON tv.id_vehiculo = cs.id_vehiculo
 GROUP BY tv.id_vehiculo, tv.placa, tv.marca, tv.modelo
 HAVING COUNT(cs.id_cita) > 1;
+
+-- servicios más solicitados y promedio de precio final
+SELECT
+    ns.nombre_servicio,
+    COUNT(cs.id_cita) AS veces_solicitado,
+    AVG(cs.precio_final) AS promedio_precio_final
+FROM servicios ns
+JOIN citas_servicio cs ON ns.id_servicio = cs.id_servicio
+GROUP BY ns.id_servicio, ns.nombre_servicio
+ORDER BY veces_solicitado DESC;
