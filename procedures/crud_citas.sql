@@ -53,7 +53,7 @@ BEGIN
 END //
 DELIMITER ;
 
--- -----------------------------------------------------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------------------------------------------------
 DELIMITER //
 CREATE PROCEDURE sp_listar_citas_servicio(
     IN p_estado VARCHAR(20)
@@ -81,7 +81,7 @@ BEGIN
 END //
 DELIMITER ;
 
--- -----------------------------------------------------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------------------------------------------------
 DELIMITER //
 CREATE PROCEDURE sp_actualizar_cita_servicio(
     IN p_id_cita INT,
@@ -140,3 +140,33 @@ BEGIN
     WHERE id_cita = p_id_cita;
 END //
 DELIMITER ;
+
+-- -----------------------------------------------------------------------------------------------------------------------------
+DELIMITER //
+CREATE PROCEDURE sp_cancelar_cita_servicio(
+    IN p_id_cita INT,
+    IN p_motivo_cancelacion VARCHAR(255)
+)
+BEGIN
+    DECLARE estado_actual VARCHAR(20);
+
+    SELECT estado_cita INTO estado_actual
+    FROM citas_servicio WHERE id_cita = p_id_cita;
+
+    IF estado_actual IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La cita especificada no existe';
+    END IF;
+
+    IF estado_actual = 'cancelada' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La cita ya está cancelada';
+    END IF;
+
+    UPDATE citas_servicio
+    SET estado_cita = 'cancelada',
+        notas = CONCAT(IFNULL(notas, ''), ' | Cancelación: ', p_motivo_cancelacion)
+    WHERE id_cita = p_id_cita;
+END //
+DELIMITER ;
+
