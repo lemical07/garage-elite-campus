@@ -170,3 +170,27 @@ BEGIN
 END //
 DELIMITER ;
 
+-- -----------------------------------------------------------------------------------------------------------------------------
+DELIMITER //
+CREATE PROCEDURE sp_eliminar_cita_borrador(
+    IN p_id_cita INT
+)
+BEGIN
+    DECLARE estado_actual VARCHAR(20);
+
+    SELECT estado_cita INTO estado_actual
+    FROM citas_servicio WHERE id_cita = p_id_cita;
+
+    IF estado_actual IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La cita especificada no existe';
+    END IF;
+
+    IF estado_actual != 'pendiente' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Solo se pueden eliminar citas en estado pendiente, sin trabajo iniciado';
+    END IF;
+
+    DELETE FROM citas_servicio WHERE id_cita = p_id_cita;
+END //
+DELIMITER ;
