@@ -13,3 +13,11 @@ JOIN mecanicos m ON cs.id_mecanico = m.id_mecanico
 JOIN servicios ns ON cs.id_servicio = ns.id_servicio
 WHERE cs.estado_cita = 'pendiente'
 ORDER BY cs.fecha_cita ASC;
+
+-- total estimado por estado de cita
+SELECT
+    estado_cita,
+    COUNT(*) AS cantidad_citas,
+    SUM(precio_final) AS total_estimado
+FROM citas_servicio
+GROUP BY estado_cita;
