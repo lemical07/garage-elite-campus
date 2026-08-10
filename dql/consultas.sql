@@ -31,3 +31,13 @@ LEFT JOIN citas_servicio cs ON m.id_mecanico = cs.id_mecanico
 GROUP BY m.id_mecanico, m.nombre
 ORDER BY citas_atendidas DESC;
 
+-- vehículos con más de una cita registrada
+SELECT
+    tv.placa,
+    tv.marca,
+    tv.modelo,
+    COUNT(cs.id_cita) AS total_citas
+FROM vehiculos tv
+JOIN citas_servicio cs ON tv.id_vehiculo = cs.id_vehiculo
+GROUP BY tv.id_vehiculo, tv.placa, tv.marca, tv.modelo
+HAVING COUNT(cs.id_cita) > 1;
